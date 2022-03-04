@@ -6,31 +6,24 @@ import 'package:intl/intl.dart';
 
 import '../widgets/imc_gauge.dart';
 
-class ImcSetsatatePage extends StatefulWidget {
-  const ImcSetsatatePage({Key? key}) : super(key: key);
+class ValueNotifierPage extends StatefulWidget {
+  const ValueNotifierPage({Key? key}) : super(key: key);
 
   @override
-  State<ImcSetsatatePage> createState() => _ImcSetsatatePageState();
+  State<ValueNotifierPage> createState() => _ImcSetsatatePageState();
 }
 
-class _ImcSetsatatePageState extends State<ImcSetsatatePage> {
+class _ImcSetsatatePageState extends State<ValueNotifierPage> {
   final pesoEC = TextEditingController();
   final alturaEC = TextEditingController();
-  var imc = 0.0;
   final formKey = GlobalKey<FormState>();
+  var imc = ValueNotifier(0.0);
 
   Future<void> calcularIMC(
       {required double peso, required double altura}) async {
-    setState(() {
-      imc = 0;
-    });
-
+    imc.value = 0;
     await Future.delayed(const Duration(seconds: 1));
-
-    setState(() {
-      imc = peso / pow(altura, 2);
-      // print(imc);
-    });
+    imc.value = peso / pow(altura, 2);
   }
 
   @override
@@ -42,9 +35,11 @@ class _ImcSetsatatePageState extends State<ImcSetsatatePage> {
 
   @override
   Widget build(BuildContext context) {
+    print('-------------------------------------------------------------');
+    print('BUILD TELA');
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ImcSetState'),
+        title: const Text('ValueNotiferPage'),
       ),
       body: SingleChildScrollView(
         child: Form(
@@ -53,8 +48,14 @@ class _ImcSetsatatePageState extends State<ImcSetsatatePage> {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
-                ImcGauge(
-                  imc: imc,
+                ValueListenableBuilder<double>(
+                  valueListenable: imc,
+                  builder: (_, imcValue, __) {
+                    print(
+                        '-------------------------------------------------------------');
+                    print('ValueListenableBuilder');
+                    return ImcGauge(imc: imcValue);
+                  },
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
@@ -72,6 +73,7 @@ class _ImcSetsatatePageState extends State<ImcSetsatatePage> {
                     if (value == null || value.isEmpty) {
                       return 'Peso obrigatório';
                     }
+                    return null;
                   },
                 ),
                 TextFormField(
@@ -89,6 +91,7 @@ class _ImcSetsatatePageState extends State<ImcSetsatatePage> {
                     if (value == null || value.isEmpty) {
                       return 'Altura obrigatório';
                     }
+                    return null;
                   },
                 ),
                 const SizedBox(height: 20),
