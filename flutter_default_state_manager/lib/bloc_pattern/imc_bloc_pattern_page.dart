@@ -1,45 +1,38 @@
-import 'dart:math';
-
 import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_default_state_manager/bloc_pattern/imc_bloc_pattern_controller.dart';
+import 'package:flutter_default_state_manager/bloc_pattern/imc_state.dart';
 import 'package:intl/intl.dart';
 
 import '../widgets/imc_gauge.dart';
 
-class ImcValueNotifierPage extends StatefulWidget {
-  const ImcValueNotifierPage({Key? key}) : super(key: key);
+class ImcBlocPatternPage extends StatefulWidget {
+  const ImcBlocPatternPage({Key? key}) : super(key: key);
 
   @override
-  State<ImcValueNotifierPage> createState() => _ImcSetsatatePageState();
+  _ImcBlocPatternPageState createState() => _ImcBlocPatternPageState();
 }
 
-class _ImcSetsatatePageState extends State<ImcValueNotifierPage> {
+class _ImcBlocPatternPageState extends State<ImcBlocPatternPage> {
+  final controller = ImcBlocPatternController();
   final pesoEC = TextEditingController();
   final alturaEC = TextEditingController();
+  var imc = 0.0;
   final formKey = GlobalKey<FormState>();
-  var imc = ValueNotifier(0.0);
-
-  Future<void> calcularIMC(
-      {required double peso, required double altura}) async {
-    imc.value = 0;
-    await Future.delayed(const Duration(seconds: 1));
-    imc.value = peso / pow(altura, 2);
-  }
 
   @override
   void dispose() {
     pesoEC.dispose();
     alturaEC.dispose();
+    controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    print('-------------------------------------------------------------');
-    print('BUILD TELA');
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ValueNotiferPage'),
+        title: const Text('Imc Bloc Pattern Page'),
       ),
       body: SingleChildScrollView(
         child: Form(
@@ -48,16 +41,29 @@ class _ImcSetsatatePageState extends State<ImcValueNotifierPage> {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
-                ValueListenableBuilder<double>(
-                  valueListenable: imc,
-                  builder: (_, imcValue, __) {
-                    print(
-                        '-------------------------------------------------------------');
-                    print('ValueListenableBuilder');
-                    return ImcGauge(imc: imcValue);
-                  },
-                ),
+                StreamBuilder<ImcState>(
+                    stream: controller.imcOut,
+                    builder: ((context, snapshot) {
+                      var imc = snapshot.data?.imc ?? 0;
+
+                      return ImcGauge(imc: imc);
+                    })),
                 const SizedBox(height: 20),
+                StreamBuilder<ImcState>(
+                    stream: controller.imcOut,
+                    builder: ((context, snapshot) {
+                      var imc = snapshot.data?.imc ?? 0;
+
+                      if (snapshot.hasError) {
+                        return Text('Erro ao calcular 0  IMC');
+                      }
+
+                      return Visibility(
+                          visible: snapshot.data is ImcStateLoading,
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ));
+                    })),
                 TextFormField(
                   controller: pesoEC,
                   keyboardType: TextInputType.number,
@@ -108,7 +114,7 @@ class _ImcSetsatatePageState extends State<ImcValueNotifierPage> {
                         double altura =
                             formatter.parse(alturaEC.text) as double;
 
-                        calcularIMC(peso: peso, altura: altura);
+                        controller.calcularImc(peso: peso, altura: altura);
                       }
                     },
                     child: const Text('Calcular IMC'))
