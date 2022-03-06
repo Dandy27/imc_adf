@@ -47,7 +47,7 @@ class ImcGauge extends StatelessWidget {
                 color: Colors.red[900]!,
                 start: 39.9,
                 end: 47.9,
-                label: 'OBESIDADE'),
+                label: 'OBESIDADE GRAVE'),
           ],
           pointers: [
             NeedlePointer(
